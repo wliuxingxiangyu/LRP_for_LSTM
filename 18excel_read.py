@@ -21,6 +21,8 @@ wbook = copy(rbook) # https://stackoverflow.com/questions/21246091/attributeerro
 wsheet = wbook.get_sheet(0)
 # date_format = wbook.add_format("yy/mm/dd") #https://xlsxwriter.readthedocs.io/workbook.html
 
+date_col_index = 1 #开户日期  在第一列
+price_index = 9
 
 def get_date(excel_date):
 	if str(excel_date) == "":
@@ -39,6 +41,7 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 	last_some_row_sum = 0
 	cur_row_index = 0
 	last_row_index = 0
+	start_row = None
 	# 循环工作簿的所有行
 	for row in rsheet.get_rows():
 		cur_row = row
@@ -46,8 +49,9 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 		cur_row_index = index_col.value
 		if cur_row_index != '序号':
 			if cur_row_index >= float(input_start_row_index):
-				start_row = row
-				cur_row_price_col = row[14]
+				if start_row is None:# only assign vale once..first_bigger_input_row_index_flag
+					start_row = row
+				cur_row_price_col = row[price_index]
 				cur_row_price_col_val = cur_row_price_col.value
 				# print("cur_row_index:"+str(cur_row_index)+" cur_row_price_col_val:"+str(cur_row_price_col_val))
 				cur_some_row_sum = cur_some_row_sum +  cur_row_price_col_val
@@ -59,8 +63,8 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 					if(detal >= 5000):
 						print("bigger than 5000!!!!!!!")
 
-					start_row_date = start_row[3].value
-					last_row_date = last_row[3].value
+					start_row_date = start_row[date_col_index].value
+					last_row_date = last_row[date_col_index].value
 					last_row_col_num = last_row[0].value
 					# 用于2019/2/24(交易序号20192286) -> 2019//(交易序号)这段时间客户明细总额:175805.36。
 					# 账号明细：。多出
@@ -75,15 +79,15 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 
 					print("")
 					if input_is_liushui == str(1):
-						print("用于 "+get_date(start_row_date)+" (交易序号 "+str(input_start_row_index)+" )-> "+
-							get_date(last_row_date)+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						print("用于 "+start_row_date+" (交易序号 "+str(input_start_row_index)+" )-> "+
+							last_row_date+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						+"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
 						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						# +"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 					else:
-						print("用于 "+get_date(start_row_date)+" (交易序号 "+str(input_start_row_index)+" )-> "+
-							get_date(last_row_date)+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						print("用于 "+start_row_date+" (交易序号 "+str(input_start_row_index)+" )-> "+
+							last_row_date+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						+" 该月额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
 						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
@@ -97,7 +101,6 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 
 
 def fill_col():
-	date_col_index = 0
 	row_index = 1 # 开户日期: row_index is 0..wsheet.write(row_index=1.2.3..
 	last_date_val = 0
 	for row in rsheet.get_rows():
@@ -130,9 +133,9 @@ def fill_col():
 if __name__ == '__main__':
     print('***usage: python3 excel_read.py input_is_liushui==1 input_start_row_index input_sum')
 
-    # input_is_liushui= sys.argv[1]
-    # input_sum = sys.argv[2]
-    # input_start_row_index = sys.argv[3]
-    # xlrd_helper(input_is_liushui, input_sum, input_start_row_index)
+    input_is_liushui= sys.argv[1]
+    input_sum = sys.argv[2]
+    input_start_row_index = sys.argv[3]
+    xlrd_helper(input_is_liushui, input_sum, input_start_row_index)
     
-    fill_col()
+    # fill_col()
