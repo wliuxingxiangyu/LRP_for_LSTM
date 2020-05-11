@@ -4,8 +4,18 @@ import xlrd
 import pandas as pd
 import sys
 from math import ceil, floor
+from datetime import datetime
 
-path = "/home/hz/virtualShareDir/pic/sister/2018/5.9.2019copy.xls"
+path = "/home/hz/virtualShareDir/pic/sister/2018/0511/20_5_11_客户.xls"
+
+def get_date(excel_date):
+	# https://stackoverflow.com/questions/31359150/convert-date-from-excel-in-number-format-to-date-format-python
+	# python_date = datetime(*xlrd.xldate_as_tuple(excel_date, 0))
+	y, m, d, h, i, s = xlrd.xldate_as_tuple(excel_date, 0)
+	readable_date = "{0}/{1}/{2}".format(y, m, d)
+	# print("readable_date:"+str(readable_date)) 
+	# https://stackoverflow.com/Questions/1108428/how-do-i-read-a-date-in-excel-format-in-python
+	return readable_date
 
 def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 	rbook = xlrd.open_workbook(path) # 打开excel文件，创建一个workbook对象,book对象也就是fruits.xlsx文件,表含有sheet名
@@ -13,9 +23,6 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 	rsheet = rbook.sheet_by_index(0)  # xls默认有3个工作簿,Sheet1,Sheet2,Sheet3 取第一个工作簿
 	cur_some_row_sum = 0
 	last_some_row_sum = 0
-	# start_row
-	# cur_row
-	# last_row
 	cur_row_index = 0
 	last_row_index = 0
 	# 循环工作簿的所有行
@@ -26,9 +33,9 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 		if cur_row_index != '序号':
 			if cur_row_index >= float(input_start_row_index):
 				start_row = row
-				# print("...cur_row_index:"+str(cur_row_index))
 				cur_row_price_col = row[14]
 				cur_row_price_col_val = cur_row_price_col.value
+				# print("cur_row_index:"+str(cur_row_index)+" cur_row_price_col_val:"+str(cur_row_price_col_val))
 				cur_some_row_sum = cur_some_row_sum +  cur_row_price_col_val
 
 				if cur_some_row_sum >= float(input_sum):
@@ -54,13 +61,19 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 
 					print("")
 					if input_is_liushui == str(1):
-						print("用于 "+str(start_row_date)+" (交易序号 "+str(input_start_row_index)+" )-> "+
-							str(last_row_date)+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						print("用于 "+get_date(start_row_date)+" (交易序号 "+str(input_start_row_index)+" )-> "+
+							get_date(last_row_date)+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						+"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
+						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
+						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						# +"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 					else:
-						print("用于 "+str(start_row_date)+" (交易序号 "+str(input_start_row_index)+" )-> "+
-							str(last_row_date)+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						print("用于 "+get_date(start_row_date)+" (交易序号 "+str(input_start_row_index)+" )-> "+
+							get_date(last_row_date)+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						+" 该月额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
+						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
+						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						# +" 该月额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 
 					print("")
 					print("cur_row_index: "+str(int(cur_row_index)))
@@ -82,12 +95,10 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 
 
 if __name__ == '__main__':
-    print('***usage: python3 excel_read.py input_start_row_index input_sum')
-    if len(sys.argv) < 3:
-        print(LOG_TAG, 'not enough argv')
-        exit(1)
+    print('***usage: python3 excel_read.py input_is_liushui==1 input_start_row_index input_sum')
 
     input_is_liushui= sys.argv[1]
-    input_start_row_index = sys.argv[2]
-    input_sum = sys.argv[3]
+    input_sum = sys.argv[2]
+    input_start_row_index = sys.argv[3]
+    
     xlrd_helper(input_is_liushui, input_sum, input_start_row_index)
