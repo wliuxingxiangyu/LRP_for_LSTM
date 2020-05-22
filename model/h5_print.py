@@ -3,6 +3,7 @@ import h5py
 from h5py import Dataset, Group, File
 import numpy as np
 import sys
+from keras.models import Sequential, load_model
 
 sys.setrecursionlimit(10000) # 100000  Segmentation fault (core dumped)
 
@@ -31,4 +32,9 @@ with h5py.File(rnnSyscallNumPath,'r') as f:
 
 # f[fkey]: <HDF5 group "/model_weights" (3 members)>  	fkey: model_weights  	f[fkey].name: /model_weights
 # f[fkey]: <HDF5 group "/optimizer_weights" (2 members)>  	fkey: optimizer_weights  	f[fkey].name: /optimizer_weights
+
+model = load_model(rnnSyscallNumPath)
+for layer in model.layers:
+    weights = layer.get_weights() # list of numpy arrays
+    print("weights : %s" % str(weights))
 

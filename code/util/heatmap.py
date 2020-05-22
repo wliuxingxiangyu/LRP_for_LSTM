@@ -6,6 +6,7 @@
 @copyright: Copyright (c) 2017, Leila Arras, Gregoire Montavon, Klaus-Robert Mueller, Wojciech Samek
 @license: see LICENSE file in repository root
 '''
+# -*- coding: utf-8 -*-
 
 import matplotlib.pyplot as plt
 

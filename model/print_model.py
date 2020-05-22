@@ -3,10 +3,13 @@ import h5py
 import numpy as np
 
 vocab = np.load("vocab")
-print("vocab: %s" % str(vocab))
+shape = np.shape(vocab)
+print("vocab: shape%s \n %s" % (str(shape), str(vocab)))
 
 embeddings = np.load("embeddings.npy")
-print("embeddings.npy: %s" % str(embeddings))
+shape = np.shape(embeddings)
+print("embeddings.npy: shape%s \n %s" % (str(shape), str(embeddings)))
 
 model = np.load("model")
-print("model: %s" % str(model))
+shape = np.shape(model)
+print("model: shape%s \n %s" % (str(shape),  str(model)))

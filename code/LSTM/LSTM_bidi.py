@@ -7,11 +7,14 @@
 @license: see LICENSE file in repository root
 '''
 
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import pickle
 from numpy import newaxis as na
-from code.LSTM.LRP_linear_layer import *
+import sys
 
+from code.LSTM.LRP_linear_layer import * #导入LRP_linear_layer , 说明 LSTM_bidi是 调用入口.
 
 class LSTM_bidi:
     
@@ -22,7 +25,8 @@ class LSTM_bidi:
         
         # vocabulary
         f_voc     = open(model_path + "vocab", 'rb')
-        self.voc  = pickle.load(f_voc)
+        self.voc  = pickle.load(f_voc) # used in : w_indices = [net.voc.index(w) for w in words] 
+        # model.summary()
         f_voc.close()
         
         # word embeddings
@@ -45,9 +49,10 @@ class LSTM_bidi:
         # linear output layer
         self.Why_Left  = model["Why_Left"]  # shape C*d
         self.Why_Right = model["Why_Right"] # shape C*d
+        # print("hz- self.Why_Left: "+str(self.Why_Left)+" self.Why_Right: "+str(self.Why_Right))
     
 
-    def set_input(self, w, delete_pos=None):
+    def set_input(self, w, delete_pos=None):#w=w_indices..
         """
         Build the numerical input sequence x/x_rev from the word indices w (+ initialize hidden layers h, c).
         Optionally delete words at positions delete_pos.
@@ -57,6 +62,8 @@ class LSTM_bidi:
         e      = self.E.shape[1]                # word embedding dimension
         x      = np.zeros((T, e))
         x[:,:] = self.E[w,:]
+        print("set_input   self.E.shape: %s "  % str(self.E.shape))
+        # printvar(x, True)
         if delete_pos is not None:
             x[delete_pos, :] = np.zeros((len(delete_pos), e))
         
@@ -68,11 +75,16 @@ class LSTM_bidi:
         self.c_Left         = np.zeros((T+1, d))
         self.h_Right        = np.zeros((T+1, d))
         self.c_Right        = np.zeros((T+1, d))
-     
+    
+    def get_para(self):
+        T      = len(self.w)                         
+        d      = int(self.Wxh_Left.shape[0]/4)
+        e      = self.E.shape[1]
+        return T,d,e# (8, 60, 60)
    
     def forward(self):
         """
-        Standard forward pass.
+        Standard forward pass: Zj = g[ Sum_i (Wij*Zi) + bj ]
         Compute the hidden layer values (assuming input x/x_rev was previously set)
         """
         T      = len(self.w)                         
@@ -82,8 +94,8 @@ class LSTM_bidi:
         idx_i, idx_g, idx_f, idx_o = np.arange(0,d), np.arange(d,2*d), np.arange(2*d,3*d), np.arange(3*d,4*d) # indices of gates i,g,f,o separately
           
         # initialize
-        self.gates_xh_Left  = np.zeros((T, 4*d))  
-        self.gates_hh_Left  = np.zeros((T, 4*d)) 
+        self.gates_xh_Left  = np.zeros((T, 4*d))  #xh:输入层x 和第t隐藏层h 的乘积.
+        self.gates_hh_Left  = np.zeros((T, 4*d))  #hh:第t隐藏层h 和第t-1隐藏层h 的乘积.
         self.gates_pre_Left = np.zeros((T, 4*d))  # gates pre-activation
         self.gates_Left     = np.zeros((T, 4*d))  # gates activation
         
@@ -92,9 +104,9 @@ class LSTM_bidi:
         self.gates_pre_Right= np.zeros((T, 4*d))
         self.gates_Right    = np.zeros((T, 4*d)) 
              
-        for t in range(T): 
-            self.gates_xh_Left[t]     = np.dot(self.Wxh_Left, self.x[t])        
-            self.gates_hh_Left[t]     = np.dot(self.Whh_Left, self.h_Left[t-1]) 
+        for t in range(T): #T= len(self.w)...
+            self.gates_xh_Left[t]     = np.dot(self.Wxh_Left, self.x[t])#xh:输入层x 和第t隐藏层h 的乘积
+            self.gates_hh_Left[t]     = np.dot(self.Whh_Left, self.h_Left[t-1])#hh:第t隐藏层h 和第t-1隐藏层h 的乘积
             self.gates_pre_Left[t]    = self.gates_xh_Left[t] + self.gates_hh_Left[t] + self.bxh_Left + self.bhh_Left
             self.gates_Left[t,idx]    = 1.0/(1.0 + np.exp(- self.gates_pre_Left[t,idx]))
             self.gates_Left[t,idx_g]  = np.tanh(self.gates_pre_Left[t,idx_g]) 
@@ -109,9 +121,9 @@ class LSTM_bidi:
             self.c_Right[t]           = self.gates_Right[t,idx_f]*self.c_Right[t-1] + self.gates_Right[t,idx_i]*self.gates_Right[t,idx_g]
             self.h_Right[t]           = self.gates_Right[t,idx_o]*np.tanh(self.c_Right[t])
             
-        self.y_Left  = np.dot(self.Why_Left,  self.h_Left[T-1])
-        self.y_Right = np.dot(self.Why_Right, self.h_Right[T-1])
-        self.s       = self.y_Left + self.y_Right
+        self.y_Left  = np.dot(self.Why_Left,  self.h_Left[T-1])# Why_Left:权重W,隐藏层h和输出层y的权重.从model文件中获取.
+        self.y_Right = np.dot(self.Why_Right, self.h_Right[T-1])#np.dot(A,B)：对于二维矩阵,计算真正意义上的矩阵乘积,同线性代数中矩阵乘法的定义.
+        self.s       = self.y_Left + self.y_Right#对于下标的元素 相加
         
         return self.s.copy() # prediction scores
      
@@ -197,7 +209,8 @@ class LSTM_bidi:
         C      = self.Why_Left.shape[0]  # number of classes
         idx    = np.hstack((np.arange(0,d), np.arange(2*d,4*d))).astype(int) # indices of gates i,f,o together
         idx_i, idx_g, idx_f, idx_o = np.arange(0,d), np.arange(d,2*d), np.arange(2*d,3*d), np.arange(3*d,4*d) # indices of gates i,g,f,o separately
-        
+        # idx_i: np.arange(0,d)=[0.1.2...d-1].
+
         # initialize
         Rx       = np.zeros(self.x.shape)
         Rx_rev   = np.zeros(self.x.shape)
@@ -212,11 +225,11 @@ class LSTM_bidi:
         Rout_mask            = np.zeros((C))
         Rout_mask[LRP_class] = 1.0  
         
-        # format reminder: lrp_linear(hin, w, b, hout, Rout, bias_nb_units, eps, bias_factor)
+        # format reminder: lrp_linear(hin, w,                       b=np.zeros((C)), hout=self.s, Rout=self.s*Rout_mask, bias_nb_units=2*d, eps, bias_factor)
         Rh_Left[T-1]  = lrp_linear(self.h_Left[T-1],  self.Why_Left.T , np.zeros((C)), self.s, self.s*Rout_mask, 2*d, eps, bias_factor, debug=False)
         Rh_Right[T-1] = lrp_linear(self.h_Right[T-1], self.Why_Right.T, np.zeros((C)), self.s, self.s*Rout_mask, 2*d, eps, bias_factor, debug=False)
         
-        for t in reversed(range(T)):
+        for t in reversed(range(T)):#t-1.t-2.t-3..1.0
             Rc_Left[t]   += Rh_Left[t]
             Rc_Left[t-1]  = lrp_linear(self.gates_Left[t,idx_f]*self.c_Left[t-1],         np.identity(d), np.zeros((d)), self.c_Left[t], Rc_Left[t], 2*d, eps, bias_factor, debug=False)
             Rg_Left[t]    = lrp_linear(self.gates_Left[t,idx_i]*self.gates_Left[t,idx_g], np.identity(d), np.zeros((d)), self.c_Left[t], Rc_Left[t], 2*d, eps, bias_factor, debug=False)
@@ -229,5 +242,6 @@ class LSTM_bidi:
             Rx_rev[t]     = lrp_linear(self.x_rev[t],     self.Wxh_Right[idx_g].T, self.bxh_Right[idx_g]+self.bhh_Right[idx_g], self.gates_pre_Right[t,idx_g], Rg_Right[t], d+e, eps, bias_factor, debug=False)
             Rh_Right[t-1] = lrp_linear(self.h_Right[t-1], self.Whh_Right[idx_g].T, self.bxh_Right[idx_g]+self.bhh_Right[idx_g], self.gates_pre_Right[t,idx_g], Rg_Right[t], d+e, eps, bias_factor, debug=False)
                    
-        return Rx, Rx_rev[::-1,:], Rh_Left[-1].sum()+Rc_Left[-1].sum()+Rh_Right[-1].sum()+Rc_Right[-1].sum()
+        # R_tot=Rx.sum()+Rx_rev.sum() + R_rest.sum() #total:全部的 # sum of all "input" relevances
+        return Rx, Rx_rev[::-1,:], Rh_Left[-1].sum()+Rc_Left[-1].sum()+Rh_Right[-1].sum()+Rc_Right[-1].sum()#-1:last elem.
 
