@@ -56,7 +56,7 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 				cur_row_price_col_val = cur_row_price_col.value
 				
 				print("\ncur_row_index: "+str(cur_row_index)+" cur_row_price_col_val: "+str(cur_row_price_col_val))
-				cur_some_row_sum = cur_some_row_sum +  int(cur_row_price_col_val)
+				cur_some_row_sum = cur_some_row_sum +  round( cur_row_price_col_val, 2) # key issue
 
 				print("input_sum: "+str(input_sum)+" cur_some_row_sum: "+str(cur_some_row_sum))
 				
@@ -85,14 +85,15 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 						print()
 						print("用于 "+str(get_date(start_row_date))+" (交易序号 "+str(input_start_row_index)+" )-> "+
 							str(get_date(last_row_date))+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
-						+"   账号明细: "+str(input_sum)+" 。多出: "+str(int(detal))+"。")
+						+"   该日账号明细: "+str(input_sum)+" 。多出: "+str( round(detal, 2))+"。")
 						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
 						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						# +"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 					else:
+						print()
 						print("用于 "+str(get_date(start_row_date))+" (交易序号 "+str(input_start_row_index)+" )-> "+
 							str(get_date(last_row_date))+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
-						+" 该日额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
+						+" 该日额度: "+str(input_sum)+" 。多出: "+str( round(detal, 2))+"。")
 						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
 						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						# +" 该月额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
