@@ -31,7 +31,9 @@ class LSTM_bidi:
         
         # word embeddings
         self.E    = np.load(model_path + 'embeddings.npy', mmap_mode='r') # shape V*e
-        
+   
+        # self.E    = 
+
         # model weights
         f_model   = open(model_path + 'model', 'rb')
         model     = pickle.load(f_model)
@@ -62,7 +64,7 @@ class LSTM_bidi:
         e      = self.E.shape[1]                # word embedding dimension
         x      = np.zeros((T, e))
         x[:,:] = self.E[w,:]
-        print("set_input   self.E.shape: %s "  % str(self.E.shape))
+        print("set_input   self.E.shape: %s "  % str(self.E.shape)) # (19538, 60)
         # printvar(x, True)
         if delete_pos is not None:
             x[delete_pos, :] = np.zeros((len(delete_pos), e))

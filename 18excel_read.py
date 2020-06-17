@@ -11,7 +11,8 @@ import os.path
 
 # path = "/home/hz/virtualShareDir/pic/sister/2018/(5_10)2018年给客户明细.xlsx"
 # path = "/home/hz/virtualShareDir/pic/sister/2018/(5_10)2018年给客户明细 (copy).xlsx"
-path = "/home/hz/virtualShareDir/pic/sister/2018/2018-0511/(5_11)2018年给客户明细1.xls"
+# path = "/home/hz/virtualShareDir/pic/sister/16-2019年客户.xlsx"
+path = "/home/hz/virtualShareDir/pic/sister/2016-6-17/Re_ Re_Re_ Re_1/(20_6_17)2019年客户(终稿).xlsx"
 
 rbook = xlrd.open_workbook(path) # 打开excel文件，创建一个workbook对象,book对象也就是fruits.xlsx文件,表含有sheet名
 rbook.sheets() # sheets方法返回对象列表,[<xlrd.sheet.Sheet object at 0x103f147f0>]
@@ -22,7 +23,7 @@ wsheet = wbook.get_sheet(0)
 # date_format = wbook.add_format("yy/mm/dd") #https://xlsxwriter.readthedocs.io/workbook.html
 
 date_col_index = 1 #开户日期  在第一列
-price_index = 9
+price_index = 6
 
 def get_date(excel_date):
 	if str(excel_date) == "":
@@ -53,9 +54,12 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 					start_row = row
 				cur_row_price_col = row[price_index]
 				cur_row_price_col_val = cur_row_price_col.value
-				# print("cur_row_index:"+str(cur_row_index)+" cur_row_price_col_val:"+str(cur_row_price_col_val))
-				cur_some_row_sum = cur_some_row_sum +  cur_row_price_col_val
+				
+				print("\ncur_row_index: "+str(cur_row_index)+" cur_row_price_col_val: "+str(cur_row_price_col_val))
+				cur_some_row_sum = cur_some_row_sum +  int(cur_row_price_col_val)
 
+				print("input_sum: "+str(input_sum)+" cur_some_row_sum: "+str(cur_some_row_sum))
+				
 				if cur_some_row_sum >= float(input_sum):
 					last_some_row_sum = cur_some_row_sum - cur_row_price_col_val
 
@@ -68,27 +72,27 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 					last_row_col_num = last_row[0].value
 					# 用于2019/2/24(交易序号20192286) -> 2019//(交易序号)这段时间客户明细总额:175805.36。
 					# 账号明细：。多出
-					print("input_start_row_index: "+str(input_start_row_index)+
-						" input_sum: "+str(input_sum))
+					# print("input_start_row_index: "+str(input_start_row_index)+
+					# 	" input_sum: "+str(input_sum))
 
-					print("cur_row_index-1: "+str(int(cur_row_index-1))+
-						" last_some_row_sum: "+str(round(last_some_row_sum, 2)))
+					# print("cur_row_index-1: "+str(int(cur_row_index-1))+
+					# 	" last_some_row_sum: "+str(round(last_some_row_sum, 2)))
 
-					print("cur_row_index: "+str(int(cur_row_index))+
-							" cur_some_row_sum: "+str(round(cur_some_row_sum, 2)))
+					# print("cur_row_index: "+str(int(cur_row_index))+
+					# 		" cur_some_row_sum: "+str(round(cur_some_row_sum, 2)))
 
-					print("")
 					if input_is_liushui == str(1):
-						print("用于 "+start_row_date+" (交易序号 "+str(input_start_row_index)+" )-> "+
-							last_row_date+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
-						+"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
+						print()
+						print("用于 "+str(get_date(start_row_date))+" (交易序号 "+str(input_start_row_index)+" )-> "+
+							str(get_date(last_row_date))+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						+"   账号明细: "+str(input_sum)+" 。多出: "+str(int(detal))+"。")
 						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
 						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						# +"   账号明细: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 					else:
-						print("用于 "+start_row_date+" (交易序号 "+str(input_start_row_index)+" )-> "+
-							last_row_date+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
-						+" 该月额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
+						print("用于 "+str(get_date(start_row_date))+" (交易序号 "+str(input_start_row_index)+" )-> "+
+							str(get_date(last_row_date))+" (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
+						+" 该日额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
 						# print("用于 _ (交易序号 "+str(input_start_row_index)+" )-> "
 						# 	+"  _  (交易序号 "+str(int(last_row_col_num))+") 这段时间客户明细总额: "+str(round(last_some_row_sum, 2))
 						# +" 该月额度: "+str(input_sum)+" 。多出: "+str(detal)+"。")
@@ -99,7 +103,7 @@ def xlrd_helper(input_is_liushui, input_sum, input_start_row_index):
 				else:
 					last_row = cur_row
 
-
+'''
 def fill_col():
 	row_index = 1 # 开户日期: row_index is 0..wsheet.write(row_index=1.2.3..
 	last_date_val = 0
@@ -126,12 +130,12 @@ def fill_col():
 	wbook.save(path)
 	# wbook.close()
 	# rbook.close()
-
+'''
 
 
 
 if __name__ == '__main__':
-    print('***usage: python3 excel_read.py input_is_liushui==1 input_start_row_index input_sum')
+    print('***usage: python3 excel_read.py input_is_liushui==1 input_sum  input_start_row_index')
 
     input_is_liushui= sys.argv[1]
     input_sum = sys.argv[2]
